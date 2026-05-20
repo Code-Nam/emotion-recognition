@@ -24,14 +24,15 @@ def load_pgm(filename):
         max_pixel_value = int(f.readline().strip())
         
         # Read pixel data
-        bytes_per_pixel = 1 if max_pixel_value < 256 else 2
-        img_bytes = f.read(width * height * bytes_per_pixel)
-        
-        # Convert bytes to a 2D list of pixel values
-        if bytes_per_pixel == 1:
-          pixels = list(img_bytes)
+        if magic_number == b'P2':
+          pixels = [int(v) for v in f.read().split()][:width * height]
         else:
-          pixels = list(struct.unpack(f'>{width * height}H', img_bytes))
+          bytes_per_pixel = 1 if max_pixel_value < 256 else 2
+          img_bytes = f.read(width * height * bytes_per_pixel)
+          if bytes_per_pixel == 1:
+            pixels = list(img_bytes)
+          else:
+            pixels = list(struct.unpack(f'>{width * height}H', img_bytes))
           
         img = [pixels[i * width:(i + 1) * width] for i in range(height)]
         
