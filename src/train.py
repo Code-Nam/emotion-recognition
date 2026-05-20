@@ -97,7 +97,7 @@ def main():
         rng.shuffle(train_data)
         for inputs, targets in train_data:
             wg, bg = network.backward(inputs, targets)
-            network.step(wg, bg)
+            network.update(wg, bg)
 
         train_loss, train_acc = evaluate(network, train_data)
         val_loss, val_acc = evaluate(network, val_data)

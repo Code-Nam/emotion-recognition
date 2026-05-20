@@ -177,22 +177,22 @@ class TestBackward(unittest.TestCase):
         self.assertFalse(all_zero)
 
 
-class TestStep(unittest.TestCase):
-    def test_weights_change_after_step(self):
+class TestUpdate(unittest.TestCase):
+    def test_weights_change_after_update(self):
         net = NeuralNetwork([4, 6, 5], seed=42)
         inputs = [0.2, 0.4, 0.6, 0.8]
         targets = one_hot("sad")
         before = copy.deepcopy(net.weights)
         wg, bg = net.backward(inputs, targets)
-        net.step(wg, bg)
+        net.update(wg, bg)
         self.assertNotEqual(before, net.weights)
 
-    def test_biases_change_after_step(self):
+    def test_biases_change_after_update(self):
         net = NeuralNetwork([4, 6, 5], seed=42)
         inputs = [0.2, 0.4, 0.6, 0.8]
         targets = one_hot("sad")
         wg, bg = net.backward(inputs, targets)
-        net.step(wg, bg)
+        net.update(wg, bg)
         all_zero = all(net.biases[i][j] == 0.0
                        for i in range(len(net.biases))
                        for j in range(len(net.biases[i])))

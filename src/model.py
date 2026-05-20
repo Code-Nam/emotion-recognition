@@ -107,7 +107,7 @@ class NeuralNetwork:
 
         return weight_gradients, bias_gradients
 
-    def step(self, weight_gradients, bias_gradients):
+    def update(self, weight_gradients, bias_gradients):
         for i in range(len(self.weights)):
             for j in range(len(self.weights[i])):
                 for k in range(len(self.weights[i][j])):
@@ -130,7 +130,7 @@ class NeuralNetwork:
             total_loss = 0.0
             for inputs, targets in dataset:
                 weight_gradients, bias_gradients = self.backward(inputs, targets)
-                self.step(weight_gradients, bias_gradients)
+                self.update(weight_gradients, bias_gradients)
                 predictions = self.forward(inputs)[0][-1]
                 total_loss += cross_entropy(predictions, targets)
 
