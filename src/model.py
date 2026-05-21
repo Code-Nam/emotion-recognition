@@ -1,3 +1,4 @@
+import json
 import math
 import random
 
@@ -124,6 +125,27 @@ class NeuralNetwork:
     def loss(self, inputs, targets):
         activations, _ = self.forward(inputs)
         return cross_entropy(activations[-1], targets)
+
+    def save(self, path):
+        payload = {
+            "layer_sizes": self.layer_sizes,
+            "learning_rate": self.learning_rate,
+            "weights": self.weights,
+            "biases": self.biases,
+        }
+        with open(path, "w") as f:
+            json.dump(payload, f)
+
+    @classmethod
+    def load(cls, path):
+        with open(path) as f:
+            payload = json.load(f)
+        network = cls.__new__(cls)
+        network.layer_sizes = payload["layer_sizes"]
+        network.learning_rate = payload["learning_rate"]
+        network.weights = payload["weights"]
+        network.biases = payload["biases"]
+        return network
 
     def train(self, dataset, epochs=100):
         for epoch in range(1, epochs + 1):
