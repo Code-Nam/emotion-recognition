@@ -1,5 +1,33 @@
 import struct
 
+
+def load_ppm(filename):
+    """Load a P3 ASCII PPM file and return a 2-D array of (R, G, B) tuples."""
+    with open(filename, "r") as f:
+        line = f.readline().strip()
+        if line != "P3":
+            raise ValueError(f"Unsupported PPM format: {line}")
+        while True:
+            line = f.readline()
+            if not line:
+                raise ValueError("Unexpected EOF while reading PPM header")
+            line = line.strip()
+            if line.startswith("#") or len(line) == 0:
+                continue
+            break
+        width, height = map(int, line.split())
+        int(f.readline().strip())  # max_val
+        values = [int(v) for v in f.read().split()]
+    img = []
+    for y in range(height):
+        row = []
+        for x in range(width):
+            idx = (y * width + x) * 3
+            row.append((values[idx], values[idx + 1], values[idx + 2]))
+        img.append(row)
+    return img
+
+
 def load_pgm(filename):
     with open(filename, 'rb') as f:
         # Read the magic number
@@ -38,25 +66,23 @@ def load_pgm(filename):
         
     return img
 
-def img_to_vectors(img, vector_size=8):
-    height = len(img)
-    width = len(img[0])
-    vectors = []
-    
-    for y in range(0, height, vector_size):
-        for x in range(0, width, vector_size):
-            vector = []
-            for dy in range(vector_size):
-              if y + dy < height:
-                for dx in range(vector_size):
-                  if x + dx < width:
-                    vector.append(img[y + dy][x + dx])
-                  else:
-                    vector.append(0)  # Pad with zeros if out of bounds
-
-              else:
-                vector.extend([0] * vector_size)  # Pad with zeros if out of bounds
-
-            vectors.append(vector)
-    
-    return vectors
+def downsample_2x(img):
+    """Average-pool an image (grayscale or color) by a factor of 2."""
+    h = len(img)
+    w = len(img[0])
+    out = []
+    for y in range(0, h, 2):
+        row = []
+        for x in range(0, w, 2):
+            pixels = [
+                img[y + dy][x + dx]
+                for dy in range(2) for dx in range(2)
+                if y + dy < h and x + dx < w
+            ]
+            if isinstance(pixels[0], tuple):
+                n = len(pixels)
+                row.append(tuple(sum(p[c] for p in pixels) // n for c in range(3)))
+            else:
+                row.append(sum(pixels) // len(pixels))
+        out.append(row)
+    return out

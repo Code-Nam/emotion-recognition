@@ -2,7 +2,7 @@ import os
 import unittest
 import tempfile
 
-from src.image_loader import load_pgm, img_to_vectors
+from src.image_loader import load_pgm, load_ppm
 
 class TestPGMImageLoader(unittest.TestCase):
   def setUp(self):
@@ -46,29 +46,48 @@ class TestPGMImageLoader(unittest.TestCase):
     
     os.remove(filename)
     
-  def test_vectorize_8x8(self):
-    img = load_pgm(self.filename)
-    vectors = img_to_vectors(img, vector_size=8)
-    
-    self.assertEqual(len(vectors), 1)  # Should be one vector for an 8x8 image
-    self.assertEqual(len(vectors[0]), 64)  # Each vector should have 64 values
-    
-  def test_vectorize_16x16(self):
-    # Create a 16x16 PGM image
-    with tempfile.NamedTemporaryFile(suffix='.pgm', delete=False, mode='wb') as temp_file:
-      temp_file.write(b'P5\n')
-      temp_file.write(b'16 16\n')
-      temp_file.write(b'255\n')
-      temp_file.write(bytes([0] * 256))  # Write 256 pixels (16x16) with value 0
-      filename = temp_file.name
-    
-    img = load_pgm(filename)
-    vectors = img_to_vectors(img, vector_size=8)
-    
-    self.assertEqual(len(vectors), 4)  # Should be four vectors for a 16x16 image
-    self.assertEqual(len(vectors[0]), 64)  # Each vector should have 64 values
-    
+
+class TestPPMImageLoader(unittest.TestCase):
+
+  def setUp(self):
+    self.temp_file = tempfile.NamedTemporaryFile(suffix='.ppm', delete=False, mode='w')
+    self.temp_file.write("P3\n4 2\n255\n")
+    for _ in range(8):
+      self.temp_file.write("10 20 30 ")
+    self.temp_file.close()
+    self.filename = self.temp_file.name
+
+  def tearDown(self):
+    if os.path.exists(self.filename):
+      os.remove(self.filename)
+
+  def test_load_ppm_dimensions(self):
+    img = load_ppm(self.filename)
+    self.assertEqual(len(img), 2)
+    self.assertEqual(len(img[0]), 4)
+
+  def test_load_ppm_pixel_values(self):
+    img = load_ppm(self.filename)
+    self.assertEqual(img[0][0], (10, 20, 30))
+    self.assertEqual(img[1][3], (10, 20, 30))
+
+  def test_load_ppm_invalid_format(self):
+    with tempfile.NamedTemporaryFile(suffix='.ppm', delete=False, mode='w') as f:
+      f.write("P2\n4 2\n255\n")
+      filename = f.name
+    with self.assertRaises(ValueError):
+      load_ppm(filename)
     os.remove(filename)
-    
+
+  def test_load_ppm_skips_comments(self):
+    with tempfile.NamedTemporaryFile(suffix='.ppm', delete=False, mode='w') as f:
+      f.write("P3\n# comment\n2 2\n255\n0 0 0  255 255 255\n0 0 0  255 255 255\n")
+      filename = f.name
+    img = load_ppm(filename)
+    self.assertEqual(img[0][0], (0, 0, 0))
+    self.assertEqual(img[0][1], (255, 255, 255))
+    os.remove(filename)
+
+
 if __name__ == '__main__':
   unittest.main()
