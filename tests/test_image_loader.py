@@ -2,7 +2,7 @@ import os
 import unittest
 import tempfile
 
-from src.image_loader import load_pgm, img_to_vectors, normalize_to_binary
+from src.image_loader import load_pgm, img_to_vectors
 
 class TestPGMImageLoader(unittest.TestCase):
   def setUp(self):
@@ -45,13 +45,6 @@ class TestPGMImageLoader(unittest.TestCase):
       load_pgm(filename)
     
     os.remove(filename)
-    
-  def test_normalize_to_binary(self):
-    img = load_pgm(self.filename)
-    binary_img = normalize_to_binary(img, threshold=128)
-    
-    self.assertEqual(binary_img[0][0], 0)  # Should be 0 since pixel value is 0
-    self.assertEqual(binary_img[7][7], 0)  # Should be 0 since pixel value is 0
     
   def test_vectorize_8x8(self):
     img = load_pgm(self.filename)

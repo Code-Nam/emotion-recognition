@@ -37,15 +37,7 @@ def load_pgm(filename):
         img = [pixels[i * width:(i + 1) * width] for i in range(height)]
         
     return img
-  
-# Otsu method not implemented here, but we can use a simple threshold for normalization
-def normalize_to_binary(img, threshold=128):
-    binary_img = []
-    for row in img:
-        binary_row = [1 if pixel >= threshold else 0 for pixel in row]
-        binary_img.append(binary_row)
-    return binary_img
-  
+
 def img_to_vectors(img, vector_size=8):
     height = len(img)
     width = len(img[0])
