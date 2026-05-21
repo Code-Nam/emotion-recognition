@@ -1,0 +1,12 @@
+{
+  "folds": 5,
+  "fold_accuracies": [
+    0.9125,
+    0.875,
+    0.9,
+    0.925,
+    0.9
+  ],
+  "mean_accuracy": 0.9025,
+  "std_accuracy": 0.0166
+}
