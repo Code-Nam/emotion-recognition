@@ -3,7 +3,7 @@
 import argparse
 
 from image_loader import load_pgm
-from model import NeuralNetwork
+from model import NeuralNetwork, INDEX_TO_LABEL
 
 
 def main():
@@ -20,7 +20,6 @@ def main():
     activations, _ = network.forward(input_vector)
     probabilities = activations[-1]
 
-    from model import INDEX_TO_LABEL
     ranked = sorted(enumerate(probabilities), key=lambda x: x[1], reverse=True)
 
     predicted_label = INDEX_TO_LABEL[ranked[0][0]]
