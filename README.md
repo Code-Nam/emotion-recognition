@@ -54,11 +54,11 @@ python src/generate_faces.py --count 100 --seed 42 --color
 
 Creates 500 synthetic 16×16 images (100 per emotion) split into `train/`, `validation/`, and `test/` subdirectories. Output goes to `data/black_white/` by default, or `data/color/` with `--color`.
 
-| Flag | Default | Description |
-| --- | --- | --- |
-| `--count` | 10 | Images per emotion class |
-| `--out` | pgm_faces | Output directory |
-| `--seed` | 42 | Random seed for reproducibility |
+| Flag      | Default   | Description                     |
+| --------- | --------- | ------------------------------- |
+| `--count` | 10        | Images per emotion class        |
+| `--out`   | pgm_faces | Output directory                |
+| `--seed`  | 42        | Random seed for reproducibility |
 
 ---
 
@@ -110,15 +110,15 @@ per-class accuracy:
 results saved to results_v3_kfold_cv/
 ```
 
-| Flag | Default | Description |
-| --- | --- | --- |
-| `--epochs` | 20 | Number of full passes over the training set |
-| `--hidden-size` | 64 | Number of neurons in the hidden layer |
-| `--learning-rate` | 0.1 | Step size for gradient descent |
-| `--folds` | 5 | Number of folds for stratified k-fold cross-validation |
-| `--data-dir` | data | Directory containing the train/validation/test splits |
-| `--results-dir` | results | Directory where output files are written |
-| `--seed` | 42 | Random seed for weight initialisation and shuffling |
+| Flag              | Default | Description                                            |
+| ----------------- | ------- | ------------------------------------------------------ |
+| `--epochs`        | 20      | Number of full passes over the training set            |
+| `--hidden-size`   | 64      | Number of neurons in the hidden layer                  |
+| `--learning-rate` | 0.1     | Step size for gradient descent                         |
+| `--folds`         | 5       | Number of folds for stratified k-fold cross-validation |
+| `--data-dir`      | data    | Directory containing the train/validation/test splits  |
+| `--results-dir`   | results | Directory where output files are written               |
+| `--seed`          | 42      | Random seed for weight initialisation and shuffling    |
 
 ---
 
@@ -130,17 +130,37 @@ After training, four files are written to `results_v3_kfold_cv/`:
 
 ```json
 {
-  "accuracy": 0.96,
-  "macro_precision": 0.9605,
-  "macro_recall": 0.96,
-  "macro_f1": 0.96,
-  "per_class": {
-    "smiling":   { "precision": 0.95,   "recall": 0.95, "f1": 0.95,   "support": 20 },
-    "neutral":   { "precision": 0.9524, "recall": 1.00, "f1": 0.9756, "support": 20 },
-    "sad":       { "precision": 0.95,   "recall": 0.95, "f1": 0.95,   "support": 20 },
-    "angry":     { "precision": 0.95,   "recall": 0.95, "f1": 0.95,   "support": 20 },
-    "surprised": { "precision": 1.00,   "recall": 0.95, "f1": 0.9744, "support": 20 }
-  }
+    "accuracy": 0.96,
+    "macro_precision": 0.9605,
+    "macro_recall": 0.96,
+    "macro_f1": 0.96,
+    "per_class": {
+        "smiling": {
+            "precision": 0.95,
+            "recall": 0.95,
+            "f1": 0.95,
+            "support": 20
+        },
+        "neutral": {
+            "precision": 0.9524,
+            "recall": 1.0,
+            "f1": 0.9756,
+            "support": 20
+        },
+        "sad": { "precision": 0.95, "recall": 0.95, "f1": 0.95, "support": 20 },
+        "angry": {
+            "precision": 0.95,
+            "recall": 0.95,
+            "f1": 0.95,
+            "support": 20
+        },
+        "surprised": {
+            "precision": 1.0,
+            "recall": 0.95,
+            "f1": 0.9744,
+            "support": 20
+        }
+    }
 }
 ```
 
@@ -166,10 +186,10 @@ epoch,train_loss,train_acc,val_loss,val_acc
 
 ```json
 {
-  "folds": 5,
-  "fold_accuracies": [0.925, 0.9125, 0.975, 0.9375, 0.9625],
-  "mean_accuracy": 0.943,
-  "std_accuracy": 0.023
+    "folds": 5,
+    "fold_accuracies": [0.925, 0.9125, 0.975, 0.9375, 0.9625],
+    "mean_accuracy": 0.943,
+    "std_accuracy": 0.023
 }
 ```
 
@@ -204,10 +224,10 @@ confidences:
   angry       0.003
 ```
 
-| Flag | Default | Description |
-| --- | --- | --- |
-| `--image` | *(required)* | Path to a grayscale PGM image file |
-| `--model` | `results/model.json` | Path to the saved model JSON |
+| Flag      | Default              | Description                        |
+| --------- | -------------------- | ---------------------------------- |
+| `--image` | _(required)_         | Path to a grayscale PGM image file |
+| `--model` | `results/model.json` | Path to the saved model JSON       |
 
 > **Note:** `infer.py` supports grayscale PGM images only. Color PPM images are not supported for inference.
 
@@ -233,15 +253,15 @@ input (256)  →  hidden (64, ReLU)  →  output (5, softmax)
 
 Each 16×16 image is flattened to a 256-value vector and pixel values are normalised to `[-0.5, 0.5]` before being fed in. Training uses stochastic gradient descent — one weight update per example — with the dataset shuffled each epoch.
 
-| File | Responsibility |
-| --- | --- |
-| `model.py` | Maths: activations, loss, forward pass, backpropagation, weight update |
-| `generate_faces.py` | Data: draws synthetic faces with randomised features and noise |
-| `image_loader.py` | I/O: reads PGM files into pixel arrays |
-| `train.py` | Loop: loads data, trains, evaluates, exports results |
-| `infer.py` | Inference: loads a saved model and predicts on a single image |
-| `validate.py` | Analysis: confusion matrix and per-class accuracy report |
-| `metrics.py` | Scores: accuracy, precision, recall, F1 and file export functions |
+| File                | Responsibility                                                         |
+| ------------------- | ---------------------------------------------------------------------- |
+| `model.py`          | Maths: activations, loss, forward pass, backpropagation, weight update |
+| `generate_faces.py` | Data: draws synthetic faces with randomised features and noise         |
+| `image_loader.py`   | I/O: reads PGM files into pixel arrays                                 |
+| `train.py`          | Loop: loads data, trains, evaluates, exports results                   |
+| `infer.py`          | Inference: loads a saved model and predicts on a single image          |
+| `validate.py`       | Analysis: confusion matrix and per-class accuracy report               |
+| `metrics.py`        | Scores: accuracy, precision, recall, F1 and file export functions      |
 
 ---
 
@@ -249,11 +269,11 @@ Each 16×16 image is flattened to a 256-value vector and pixel values are normal
 
 ### Version comparison
 
-| Version | Input | Hidden size | Test accuracy |
-| --- | --- | --- | --- |
-| V1 | 8×8 (downsampled) → 64 values | 8 | 0.73 |
-| V2 | 16×16 (full resolution) → 256 values | 64 | 0.96 |
-| V3 (k-fold CV) | 16×16 → 256 values | 64 | 0.94 |
+| Version        | Input                                | Hidden size | Test accuracy |
+| -------------- | ------------------------------------ | ----------- | ------------- |
+| V1             | 8×8 (downsampled) → 64 values        | 8           | 0.73          |
+| V2             | 16×16 (full resolution) → 256 values | 64          | 0.96          |
+| V3 (k-fold CV) | 16×16 → 256 values                   | 64          | 0.94          |
 
 Removing the downsampling step was the biggest single improvement — the 16×16 images are small enough that no size reduction is needed, and downsampling was discarding features the network needed to distinguish emotions, particularly **neutral**.
 
@@ -263,21 +283,50 @@ Removing the downsampling step was the biggest single improvement — the 16×16
 
 Both models use hidden size 64, 20 epochs, and 5-fold cross-validation. The color model uses 8×8 downsampled PPM images (192 features, 3 RGB channels); the grayscale model uses 16×16 PGM images (256 features).
 
-| Metric | Grayscale | Color |
-| --- | --- | --- |
-| Test accuracy | **0.94** | 0.87 |
-| Macro F1 | **0.9413** | 0.8704 |
-| Macro precision | **0.9489** | 0.8845 |
+| Metric           | Grayscale         | Color         |
+| ---------------- | ----------------- | ------------- |
+| Test accuracy    | **0.94**          | 0.87          |
+| Macro F1         | **0.9413**        | 0.8704        |
+| Macro precision  | **0.9489**        | 0.8845        |
 | CV mean accuracy | **0.943 ± 0.023** | 0.903 ± 0.017 |
 
 **Per-class F1:**
 
-| Class | Grayscale | Color |
-| --- | --- | --- |
-| smiling | 0.895 | 0.857 |
-| neutral | 0.889 | 0.737 |
-| sad | 0.974 | **0.976** |
-| angry | 0.974 | 0.783 |
-| surprised | 0.974 | **1.000** |
+| Class     | Grayscale | Color     |
+| --------- | --------- | --------- |
+| smiling   | 0.895     | 0.857     |
+| neutral   | 0.889     | 0.737     |
+| sad       | 0.974     | **0.976** |
+| angry     | 0.974     | 0.783     |
+| surprised | 0.974     | **1.000** |
 
 The grayscale model outperforms color across almost every metric. The classes most affected by the switch to color are **neutral** (F1 −0.15) and **angry** (F1 −0.19) — the 8×8 downsampling erases the fine eyebrow and mouth detail that the network relies on to distinguish these two emotions. Conversely, **sad** and **surprised** hold up or slightly improve with color, because chromatic cues (blue tears, dark mouth interior) survive the resolution reduction.
+
+---
+
+## Dataset limitations and overfitting
+
+**The reported accuracies (94–96%) are artificially high and do not reflect real-world performance.** The dataset is fully synthetic, algorithmically generated, and lacks the complexity of actual facial images. See `results_v3_kfold_cv/comparaison_split_vs_kfold.md` for detailed analysis.
+
+### Why metrics are misleading
+
+1. **Synthetic data with unambiguous features** — each emotion is drawn with hard-coded geometric rules (upward arc = smile, downward arc = sad, tilted brows = angry, etc.). There is no real-world ambiguity or natural variation.
+
+2. **Minimal noise** — Gaussian noise has σ = 3–6 on a 0–255 scale (~2% of dynamic range). Emotional features dwarf the noise.
+
+3. **No real-world variation** — all faces are 16×16, centered at (7.5–8.5, 7.5–8.5), with only ±0.7 px position jitter and ±10% scale variation. No rotation, occlusion, lighting changes, or pose variation.
+
+4. **Deterministic, narrow distribution** — test set generated from same algorithm as train set with fixed seed per sample. Model never encounters out-of-distribution data.
+
+### Expected performance on real data
+
+On actual face photographs (e.g., CK+, FER2013, AffectNet), this model would likely achieve **~20% accuracy** (random chance for 5 classes), because it has learned the geometry of the _generator_, not emotion recognition itself.
+
+### What would help
+
+- Use a real emotion dataset (CK+, FER2013, AffectNet)
+- Add realistic augmentation: rotation (±30°), occlusions, variable lighting
+- Increase synthetic data realism: higher noise, more position/scale variation
+- Test on held-out real data to measure actual generalization
+
+---
