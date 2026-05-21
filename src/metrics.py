@@ -83,7 +83,20 @@ def export_confusion_matrix(matrix, output_dir):
 def export_training_log(log, output_dir):
     path = os.path.join(output_dir, "training_log.csv")
     with open(path, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["epoch", "train_loss", "train_acc", "val_loss", "val_acc"])
+        writer = csv.DictWriter(f, fieldnames=log[0].keys())
         writer.writeheader()
         writer.writerows(log)
+    return path
+
+
+def export_kfold_summary(fold_accuracies, mean_acc, std_acc, output_dir):
+    payload = {
+        "folds": len(fold_accuracies),
+        "fold_accuracies": fold_accuracies,
+        "mean_accuracy": round(mean_acc, 4),
+        "std_accuracy": round(std_acc, 4),
+    }
+    path = os.path.join(output_dir, "kfold_summary.json")
+    with open(path, "w") as f:
+        json.dump(payload, f, indent=2)
     return path
