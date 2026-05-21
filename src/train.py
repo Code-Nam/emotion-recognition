@@ -5,23 +5,29 @@ import os
 import random
 from pathlib import Path
 
-from image_loader import load_pgm
+from image_loader import downsample_2x, load_pgm, load_ppm
 from metrics import export_confusion_matrix, export_kfold_summary, export_metrics, export_training_log
 from model import LABELS, NeuralNetwork, one_hot
 from validate import confusion_matrix, print_report
 
 
-def load_split(data_root, split_name):
+def load_split(data_root, split_name, color=False):
     split_path = Path(data_root) / split_name
     dataset = []
+    ext = "ppm" if color else "pgm"
+    loader = load_ppm if color else load_pgm
 
     for label_name in LABELS:
         label_path = split_path / label_name
         if not label_path.exists():
             continue
-        for image_path in sorted(label_path.glob("*.pgm")):
-            image = load_pgm(str(image_path))
-            input_vector = [(pixel / 255.0) - 0.5 for row in image for pixel in row]
+        for image_path in sorted(label_path.glob(f"*.{ext}")):
+            image = loader(str(image_path))
+            if color:
+                image = downsample_2x(image)
+                input_vector = [(ch / 255.0) - 0.5 for row in image for pixel in row for ch in pixel]
+            else:
+                input_vector = [(pixel / 255.0) - 0.5 for row in image for pixel in row]
             target_vector = one_hot(label_name)
             dataset.append((input_vector, target_vector))
 
@@ -58,12 +64,13 @@ def stratified_kfold(dataset, k, seed):
     return folds
 
 
-def train_network(train_data, input_size, hidden_size, learning_rate, epochs, seed, val_data=None):
+def train_network(train_data, input_size, hidden_size, learning_rate, epochs, seed, val_data=None, verbose=False):
     rng = random.Random(seed)
     network = NeuralNetwork([input_size, hidden_size, len(LABELS)],
                             learning_rate=learning_rate,
                             seed=seed)
     epoch_log = []
+    width = len(str(epochs))
     for epoch in range(1, epochs + 1):
         rng.shuffle(train_data)
         for inputs, targets in train_data:
@@ -76,27 +83,36 @@ def train_network(train_data, input_size, hidden_size, learning_rate, epochs, se
             entry["val_loss"] = round(val_loss, 6)
             entry["val_acc"] = round(val_acc, 4)
         epoch_log.append(entry)
+        if verbose:
+            line = f"  epoch {epoch:{width}d}/{epochs}  loss={train_loss:.4f}  acc={train_acc:.3f}"
+            if val_data is not None:
+                line += f"  val_loss={val_loss:.4f}  val_acc={val_acc:.3f}"
+            print(line)
     return network, epoch_log
 
 
 def main():
     parser = argparse.ArgumentParser(description="Train the emotion recognition network.")
-    parser.add_argument("--data-dir", default="data")
+    parser.add_argument("--data-dir", default="data/black_white")
     parser.add_argument("--epochs", type=int, default=20)
     parser.add_argument("--hidden-size", type=int, default=64)
     parser.add_argument("--learning-rate", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--folds", type=int, default=5)
     parser.add_argument("--results-dir", default="results_v3_kfold_cv")
+    parser.add_argument("--color", action="store_true",
+                        help="Load color PPM images instead of grayscale PGM")
     args = parser.parse_args()
 
-    cv_data = load_split(args.data_dir, "train") + load_split(args.data_dir, "validation")
-    test_data = load_split(args.data_dir, "test")
+    cv_data = (load_split(args.data_dir, "train", color=args.color) +
+               load_split(args.data_dir, "validation", color=args.color))
+    test_data = load_split(args.data_dir, "test", color=args.color)
 
     if not cv_data:
         raise SystemExit(
             "No training data found. Generate it first with:\n"
-            "  python src/generate_faces.py --count 100 --out data --seed 42"
+            "  python src/generate_faces.py --count 100 --seed 42\n"
+            "  python src/generate_faces.py --count 100 --seed 42 --color"
         )
 
     input_size = len(cv_data[0][0])
@@ -149,7 +165,8 @@ def main():
 
     print("\ntraining final model on all CV data...")
     final_network, _ = train_network(cv_data, input_size, args.hidden_size,
-                                     args.learning_rate, args.epochs, args.seed)
+                                     args.learning_rate, args.epochs, args.seed,
+                                     verbose=True)
     _, test_acc = evaluate(final_network, test_data)
     print(f"test accuracy: {test_acc:.3f}")
 

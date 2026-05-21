@@ -5,7 +5,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from train import downsample, evaluate, load_split
+from train import evaluate, load_split
 from model import NeuralNetwork, one_hot, LABELS
 
 
@@ -28,40 +28,6 @@ class MockNetwork:
 
     def loss(self, inputs, targets):
         return self._loss
-
-
-class TestDownsample(unittest.TestCase):
-    def test_halves_dimensions(self):
-        image = [[i * 4 + j for j in range(4)] for i in range(4)]
-        result = downsample(image, factor=2)
-        self.assertEqual(len(result), 2)
-        self.assertEqual(len(result[0]), 2)
-
-    def test_averages_2x2_block(self):
-        image = [
-            [0, 100],
-            [100, 200],
-        ]
-        result = downsample(image, factor=2)
-        self.assertAlmostEqual(result[0][0], 100.0)
-
-    def test_uniform_image_is_unchanged_value(self):
-        image = [[128] * 4 for _ in range(4)]
-        result = downsample(image, factor=2)
-        for row in result:
-            for value in row:
-                self.assertAlmostEqual(value, 128.0)
-
-    def test_factor_1_returns_same_image(self):
-        image = [[10, 20], [30, 40]]
-        result = downsample(image, factor=1)
-        self.assertEqual(result, [[10.0, 20.0], [30.0, 40.0]])
-
-    def test_16x16_to_8x8(self):
-        image = [[200] * 16 for _ in range(16)]
-        result = downsample(image, factor=2)
-        self.assertEqual(len(result), 8)
-        self.assertEqual(len(result[0]), 8)
 
 
 class TestEvaluate(unittest.TestCase):
@@ -110,10 +76,10 @@ class TestLoadSplit(unittest.TestCase):
         dataset = load_split(self.tmpdir, "train")
         self.assertEqual(len(dataset), 1)
 
-    def test_input_vector_length_is_64(self):
+    def test_input_vector_length_is_256(self):
         dataset = load_split(self.tmpdir, "train")
         inputs, _ = dataset[0]
-        self.assertEqual(len(inputs), 64)
+        self.assertEqual(len(inputs), 256)
 
     def test_inputs_are_centered_around_zero(self):
         dataset = load_split(self.tmpdir, "train")
