@@ -1,0 +1,6 @@
+,smiling,neutral,sad,angry,surprised
+smiling,17,3,0,0,0
+neutral,0,20,0,0,0
+sad,0,1,19,0,0
+angry,0,1,0,19,0
+surprised,1,0,0,0,19

@@ -87,7 +87,7 @@ def main():
     parser.add_argument("--learning-rate", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--folds", type=int, default=5)
-    parser.add_argument("--results-dir", default="results")
+    parser.add_argument("--results-dir", default="results_v3_kfold_cv")
     args = parser.parse_args()
 
     cv_data = load_split(args.data_dir, "train") + load_split(args.data_dir, "validation")
