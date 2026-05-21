@@ -1,32 +1,14 @@
 """Train the simple neural network on the generated face dataset."""
 
 import argparse
+import os
 import random
 from pathlib import Path
 
-from image_loader import img_to_vectors, load_pgm
+from image_loader import load_pgm
+from metrics import export_confusion_matrix, export_metrics, export_training_log
 from model import LABELS, NeuralNetwork, one_hot
 from validate import confusion_matrix, print_report
-
-
-def downsample(image, factor=2):
-    """Average-pool the image by reducing each (factor x factor) block to one value."""
-    height = len(image)
-    width = len(image[0])
-    result = []
-    for y in range(0, height, factor):
-        row = []
-        for x in range(0, width, factor):
-            total = 0.0
-            count = 0
-            for dy in range(factor):
-                for dx in range(factor):
-                    if y + dy < height and x + dx < width:
-                        total += image[y + dy][x + dx]
-                        count += 1
-            row.append(total / count)
-        result.append(row)
-    return result
 
 
 def load_split(data_root, split_name):
@@ -39,8 +21,7 @@ def load_split(data_root, split_name):
             continue
         for image_path in sorted(label_path.glob("*.pgm")):
             image = load_pgm(str(image_path))
-            small = downsample(image, factor=2)
-            input_vector = [(pixel / 255.0) - 0.5 for row in small for pixel in row]
+            input_vector = [(pixel / 255.0) - 0.5 for row in image for pixel in row]
             target_vector = one_hot(label_name)
             dataset.append((input_vector, target_vector))
 
@@ -66,9 +47,10 @@ def main():
     parser = argparse.ArgumentParser(description="Train the emotion recognition network.")
     parser.add_argument("--data-dir", default="data")
     parser.add_argument("--epochs", type=int, default=20)
-    parser.add_argument("--hidden-size", type=int, default=8)
+    parser.add_argument("--hidden-size", type=int, default=64)
     parser.add_argument("--learning-rate", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--results-dir", default="results")
     args = parser.parse_args()
 
     train_data = load_split(args.data_dir, "train")
@@ -92,6 +74,7 @@ def main():
     print()
 
     rng = random.Random(args.seed)
+    training_log = []
 
     for epoch in range(1, args.epochs + 1):
         rng.shuffle(train_data)
@@ -101,6 +84,13 @@ def main():
 
         train_loss, train_acc = evaluate(network, train_data)
         val_loss, val_acc = evaluate(network, val_data)
+        training_log.append({
+            "epoch": epoch,
+            "train_loss": round(train_loss, 6),
+            "train_acc": round(train_acc, 4),
+            "val_loss": round(val_loss, 6),
+            "val_acc": round(val_acc, 4),
+        })
         print(f"epoch {epoch:03d}  train loss={train_loss:.4f} acc={train_acc:.2f}"
               f"  |  val loss={val_loss:.4f} acc={val_acc:.2f}")
 
@@ -109,6 +99,12 @@ def main():
 
     matrix = confusion_matrix(network, test_data)
     print_report(matrix, title="test set report")
+
+    os.makedirs(args.results_dir, exist_ok=True)
+    export_training_log(training_log, args.results_dir)
+    export_confusion_matrix(matrix, args.results_dir)
+    export_metrics(matrix, args.results_dir)
+    print(f"\nresults saved to {args.results_dir}/")
 
 
 if __name__ == "__main__":
